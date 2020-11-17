@@ -1,4 +1,5 @@
 import os
+import csv
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import numpy as np
@@ -10,9 +11,15 @@ from tensorflow.keras import backend as K
 numpy_iou_result = []
 tf_iou_result = []
 
-## Writing data to file at once will work better
-def write_result_to_file():
-    pass
+
+# write numpy_iou result to csv file
+# index(filename)   result_value
+# ...               ...
+# total             total_result
+def write_result_to_file(filename):
+    global numpy_iou_result
+    np.savetxt("np_results.csv", numpy_iou_result, delimiter=",")
+
 
 ## IOU in pure numpy
 def numpy_iou(y_true, y_pred, n_class=2):
@@ -41,8 +48,7 @@ def numpy_iou(y_true, y_pred, n_class=2):
     for idx in range(batch):
         iou_value = iou(y_true[idx], y_pred[idx], n_class)
         score.append(iou_value)
-        # TODO: write to file
-        numpy_iou_result.append((idx, iou_value))
+        numpy_iou_result.append(iou_value)
     return np.mean(score)
 
 
@@ -59,12 +65,14 @@ def numpy_mean_iou(y_true, y_pred):
 
 
 def tf_mean_iou(y_true, y_pred):
+    global tf_iou_result
     prec = []
     for t in np.arange(0.5, 1.0, 0.5):
         y_pred_ = tf.cast(y_pred > t, tf.int32)
         score, up_opt = tf.metrics.mean_iou(y_true, y_pred_, 2)
         K.get_session().run(tf.local_variables_initializer())
         prec.append(score)
+        tf_iou_result.append(score)
     val = K.mean(K.stack(prec), axis=0)
     return [val, up_opt]
 
@@ -105,6 +113,7 @@ if __name__ == "__main__":
         miou = numpy_mean_iou(y_true, y_pred)
         miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
         print("Numpy mIOU: ", miou)
+        write_result_to_file("np_results.csv")
 
         miou, conf = tf_mean_iou(y_true, y_pred)
         sess.run(conf, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
