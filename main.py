@@ -13,9 +13,9 @@ tf_iou_result = []
 
 
 # write numpy_iou result to csv file
-# index(filename)   result_value
-# ...               ...
-# total             total_result
+# index(filename)   np_result       tf_result
+# ...               ...             ...
+# total             np_total        tf_total
 def write_result_to_file(filename):
     global numpy_iou_result
     np.savetxt("np_results.csv", numpy_iou_result, delimiter=",")
