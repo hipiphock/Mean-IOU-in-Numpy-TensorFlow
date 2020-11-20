@@ -113,7 +113,7 @@ if __name__ == "__main__":
         miou = numpy_mean_iou(y_true, y_pred)
         miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
         print("Numpy mIOU: ", miou)
-        write_result_to_file("np_results.csv")
+        write_result_to_file("results/np_results.csv")
 
         miou, conf = tf_mean_iou(y_true, y_pred)
         sess.run(conf, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
