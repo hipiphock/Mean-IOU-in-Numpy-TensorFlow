@@ -1,5 +1,6 @@
 import os
 import csv
+import time
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import numpy as np
@@ -8,29 +9,30 @@ import tensorflow as tf
 # from tensorflow.compat.v1.keras import backend as K
 from tensorflow.keras import backend as K
 
-numpy_iou_result = []
-tf_iou_result = []
-
+iou_result = []
+iou_result.append(["index(filename)", "np_results", "tf_results"])
+np_iou_results = []
+tf_iou_results = []
 
 # write numpy_iou result to csv file
 # index(filename)   np_result       tf_result
 # ...               ...             ...
 # total             np_total        tf_total
 def write_result_to_file(filename):
-    global numpy_iou_result
-    np.savetxt("np_results.csv", numpy_iou_result, delimiter=",")
+    global iou_result
+    np.savetxt("results/iou_results.csv", iou_result, delimiter=",")
 
 
 ## IOU in pure numpy
 def numpy_iou(y_true, y_pred, n_class=2):
-    global numpy_iou_result
+    global np_iou_results
     def iou(y_true, y_pred, n_class):
         # IOU = TP/(TP+FN+FP)
         IOU = []
         for c in range(n_class):
-            TP = np.sum((y_true == c) & (y_pred == c))
-            FP = np.sum((y_true != c) & (y_pred == c))
-            FN = np.sum((y_true == c) & (y_pred != c))
+            TP = np.sum((y_true == y_pred))
+            FP = np.sum((y_true != y_pred) & (y_true == 0))
+            FN = np.sum((y_true != y_pred) & (y_pred == 0))
 
             n = TP
             d = float(TP + FP + FN + 1e-12)
@@ -48,7 +50,7 @@ def numpy_iou(y_true, y_pred, n_class=2):
     for idx in range(batch):
         iou_value = iou(y_true[idx], y_pred[idx], n_class)
         score.append(iou_value)
-        numpy_iou_result.append(iou_value)
+        np_iou_results.append(iou_value)
     return np.mean(score)
 
 
@@ -65,14 +67,14 @@ def numpy_mean_iou(y_true, y_pred):
 
 
 def tf_mean_iou(y_true, y_pred):
-    global tf_iou_result
+    global tf_iou_results
     prec = []
     for t in np.arange(0.5, 1.0, 0.5):
         y_pred_ = tf.cast(y_pred > t, tf.int32)
         score, up_opt = tf.metrics.mean_iou(y_true, y_pred_, 2)
         K.get_session().run(tf.local_variables_initializer())
         prec.append(score)
-        tf_iou_result.append(score)
+        tf_iou_results.append(score)
     val = K.mean(K.stack(prec), axis=0)
     return [val, up_opt]
 
@@ -91,17 +93,17 @@ if __name__ == "__main__":
     for idx, path in enumerate(os.listdir("target/")):              # 어차피 target이랑 test랑 파일명 같아
         mask = cv2.imread("target/" + path, -1)
         mask = np.expand_dims(mask, axis=-1)
-        for i in range(720):
-            for j in range(1280):
-                if mask[i][j] != 0:
-                    mask[i][j] = 1
+        # for i in range(720):
+        #     for j in range(1280):
+        #         if mask[i][j] != 0:
+        #             mask[i][j] = 1
         y_true_masks[idx] = mask
         mask = cv2.imread("test/" + path, -1)
         mask = np.expand_dims(mask, axis=-1)
-        for i in range(720):
-            for j in range(1280):
-                if mask[i][j] != 0:
-                    mask[i][j] = 1
+        # for i in range(720):
+        #     for j in range(1280):
+        #         if mask[i][j] != 0:
+        #             mask[i][j] = 1
         y_pred_masks[idx] = mask
 
     ## Session
@@ -109,13 +111,16 @@ if __name__ == "__main__":
         sess.run(tf.local_variables_initializer())
         sess.run(tf.global_variables_initializer())
 
-        ## Mean IOU
-        miou = numpy_mean_iou(y_true, y_pred)
-        miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        print("Numpy mIOU: ", miou)
-        write_result_to_file("results/np_results.csv")
+        # Mean IOU
+        np_miou = numpy_mean_iou(y_true, y_pred)
+        np_miou = sess.run(np_miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
+        print("Numpy mIOU: ", np_miou)
 
-        miou, conf = tf_mean_iou(y_true, y_pred)
-        sess.run(conf, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        print("TF mIOU: ", miou)
+        # tf_miou, conf = tf_mean_iou(y_true, y_pred)
+        # sess.run(conf, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
+        # tf_miou = sess.run(tf_miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
+        # print("TF mIOU: ", tf_miou)
+        # tf_miou = np_miou
+
+        # iou_result.append(["total mean", np_miou, tf_miou])
+        # write_result_to_file("results/iou_results.csv")
