@@ -12,15 +12,17 @@ iou_result = []
 iou_result.append(["index(filename)", "np_result", "tf_result"])
 np_iou_results = []
 tf_iou_results = []
+file_list = []
 
 
 # write numpy_iou result to csv file
 # index(filename)   np_result       tf_result
 # ...               ...             ...
 # total             np_total        tf_total
-def write_result_to_file(filename):
-    global tf_iou_results
-    np.savetxt(filename, tf_iou_results, delimiter=",")
+def write_result_to_file(filename, dataset):
+    with open(filename, "w") as write_file:
+        writer = csv.writer(write_file)
+        writer.writerows(dataset)
 
 
 ## IOU in pure numpy
@@ -98,6 +100,7 @@ if __name__ == "__main__":
 
     ## Reading the masks from the path
     for idx, path in enumerate(os.listdir("target/")):              # 어차피 target이랑 test랑 파일명 같아
+        file_list.append(path)
         y_true_masks = np.zeros((1, 720, 1280, 1), dtype=np.int32)    # 직접 레이블링 한거
         y_pred_masks = np.zeros((1, 720, 1280, 1), dtype=np.int32)    # detect 된거
         mask = cv2.imread("target/" + path, -1)
@@ -128,4 +131,8 @@ if __name__ == "__main__":
             print("TF mIOU: ", tf_miou)
             tf_iou_results.append(tf_miou)
 
-    write_result_to_file("results/tf_results.csv")
+    test_arr = []
+    for filename, data in zip(file_list, tf_iou_results):
+        test_arr.append([filename, data])
+
+    write_result_to_file("results/tf_test_resultsasdf.csv", test_arr)
