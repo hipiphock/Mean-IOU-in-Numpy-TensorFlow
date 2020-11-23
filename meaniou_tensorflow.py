@@ -20,7 +20,7 @@ tf_iou_results = []
 # total             np_total        tf_total
 def write_result_to_file(filename):
     global tf_iou_results
-    np.savetxt(filename, iou_result, delimiter=",")
+    np.savetxt(filename, tf_iou_results, delimiter=",")
 
 
 ## IOU in pure numpy
