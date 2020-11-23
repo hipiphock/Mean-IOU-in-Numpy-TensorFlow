@@ -93,11 +93,13 @@ if __name__ == "__main__":
     ## Reading the masks from the path
     y_true_masks = np.zeros((106, 720, 1280, 1), dtype=np.int32)    # 직접 레이블링 한거
     y_pred_masks = np.zeros((106, 720, 1280, 1), dtype=np.int32)    # detect 된거
-    y_true_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
-    y_pred_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
+    # y_true_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
+    # y_pred_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
     y_true_indiv_masklist = []
     y_pred_indiv_masklist = []
     for idx, path in enumerate(os.listdir("target/")):              # 어차피 target이랑 test랑 파일명 같아
+        y_true_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
+        y_pred_indiv_mask = np.zeros((1, 720, 1280, 1), dtype=np.int32)
         file_list.append(path)
         mask = cv2.imread("target/" + path, -1)
         mask = np.expand_dims(mask, axis=-1)
