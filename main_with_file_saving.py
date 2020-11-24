@@ -148,6 +148,7 @@ if __name__ == "__main__":
         real_tf_iou_results.append(tf_iou_results[2*i + 1])
 
     total_result = []
+    total_result.append(["filename", "np_results", "tf_results"])
     for filename, np_result, tf_result in zip(file_list, np_iou_results, real_tf_iou_results):
         total_result.append([filename, np_result, tf_result])
     total_result.append(["total results", np_miou, tf_miou])
