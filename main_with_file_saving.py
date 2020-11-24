@@ -135,7 +135,6 @@ if __name__ == "__main__":
             tf_miou, conf = tf_mean_iou(y_true_indiv, y_pred_indiv)
             sess.run(conf, feed_dict={y_true_indiv: y_true_mask, y_pred_indiv: y_pred_mask})
             tf_miou = sess.run(tf_miou, feed_dict={y_true_indiv: y_true_mask, y_pred_indiv: y_pred_mask})
-            print("Individual TF mIOU: ", tf_miou)
             tf_iou_results.append(tf_miou)
 
         ## Tensorflow Mean IOU(Overall)
