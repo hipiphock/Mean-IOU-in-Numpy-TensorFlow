@@ -18,7 +18,7 @@ file_list = []
 # ...               ...             ...
 # total             np_total        tf_total
 def write_result_to_file(filename, dataset):
-    with open(filename, "w") as write_file:
+    with open(filename, "w", newline="") as write_file:
         writer = csv.writer(write_file)
         writer.writerows(dataset)
 
@@ -126,9 +126,9 @@ if __name__ == "__main__":
         sess.run(tf.global_variables_initializer())
 
         ## Numpy Mean IOU
-        miou = numpy_mean_iou(y_true, y_pred)
-        miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        print("Numpy mIOU: ", miou)
+        np_miou = numpy_mean_iou(y_true, y_pred)
+        np_miou = sess.run(np_miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
+        print("Numpy mIOU: ", np_miou)
 
         ## Tensorflow Mean IOU(Individual)
         for y_true_mask, y_pred_mask in zip(y_true_indiv_masklist, y_pred_indiv_masklist):
@@ -139,12 +139,17 @@ if __name__ == "__main__":
             tf_iou_results.append(tf_miou)
 
         ## Tensorflow Mean IOU(Overall)
-        miou, conf = tf_mean_iou(y_true, y_pred)
+        tf_miou, conf = tf_mean_iou(y_true, y_pred)
         sess.run(conf, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        miou = sess.run(miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
-        print("TF mIOU: ", miou)
+        tf_miou = sess.run(tf_miou, feed_dict={y_true: y_true_masks, y_pred: y_pred_masks})
+        print("TF mIOU: ", tf_miou)
+
+    real_tf_iou_results = []
+    for i in range(106):
+        real_tf_iou_results.append(tf_iou_results[2*i + 1])
 
     total_result = []
-    for filename, np_result, tf_result in zip(file_list, np_iou_results, tf_iou_results):
+    for filename, np_result, tf_result in zip(file_list, np_iou_results, real_tf_iou_results):
         total_result.append([filename, np_result, tf_result])
+    total_result.append(["total results", np_miou, tf_miou])
     write_result_to_file("results/total_result.csv", total_result)
